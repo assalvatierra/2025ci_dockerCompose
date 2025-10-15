@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 123456 
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  apiserver:
+    image: ghcr.io/assalvatierra/2025ci_apiserver/myapp:latest
+    container_name: myApiServer
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      # Add environment variables as needed, e.g.:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=postgres;Username=admin;Password=123456"
+    depends_on:
+       - postgres  # Uncomment and adjust if you have a database service
+      
+  clientapp:
+    image: ghcr.io/assalvatierra/2025ci_ngclient:main-4368ca3
+    container_name: myClientApp
+    ports:
+      - "50361:80"
+    depends_on:
+      - apiserver
+
+volumes:
+  pgdata:
