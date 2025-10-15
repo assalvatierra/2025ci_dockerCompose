@@ -4,7 +4,7 @@ services:
     container_name: postgres
     environment:
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: 123456 
+      POSTGRES_PASSWORD: 123456
       POSTGRES_DB: postgres
     ports:
       - "5432:5432"
@@ -20,17 +20,30 @@ services:
     environment:
       # Add environment variables as needed, e.g.:
       ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      ASPNETCORE_HTTPS_PORTS: 8081
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=postgres;Username=admin;Password=123456"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/weatherforecast"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     depends_on:
-       - postgres  # Uncomment and adjust if you have a database service
-      
+       - postgres
+
   clientapp:
-    image: ghcr.io/assalvatierra/2025ci_ngclient:main-4368ca3
+    image: ghcr.io/assalvatierra/2025ci_ngclient:latest
     container_name: myClientApp
     ports:
       - "50361:80"
+    environment:
+      - API_URL=http://apiserver:8080
+      - APP_NAME=Angular Client (Docker Compose)
+      - PRODUCTION=false
     depends_on:
-      - apiserver
+      apiserver:
+        condition: service_healthy
 
 volumes:
   pgdata:
