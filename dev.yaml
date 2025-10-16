@@ -1,0 +1,42 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  apiserver:
+    image: ghcr.io/assalvatierra/2025ci_apiserver/myapp:latest
+    container_name: myApiServer
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      # Add environment variables as needed, e.g.:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=postgres;Username=admin;Password=123456"
+    depends_on:
+       - postgres
+
+  clientapp:
+    # image: ghcr.io/assalvatierra/2025ci_ngclient:latest
+    image: local-ngclient:latest
+    container_name: myClientApp
+    ports:
+      - "50361:80"
+    environment:
+      - API_URL=http://localhost:8080
+      - APP_NAME=Angular Client (Docker Compose)
+      - PRODUCTION=false
+    depends_on:
+      - apiserver
+
+volumes:
+  pgdata:
