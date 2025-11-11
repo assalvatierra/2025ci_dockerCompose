@@ -1,0 +1,63 @@
+_format_version: "3.0"
+
+services:
+  - name: api-server
+    protocol: http
+    host: host.docker.internal
+    port: 8080
+    path: /
+  - name: test-url
+    protocol: https
+    host: realwheelsdavao.com
+    port: 443
+    path: /
+
+routes:
+  - name: api-test-route
+    service: api-server
+    paths:
+      - /api/user/test
+    methods:
+      - GET
+      - POST
+    strip_path: false
+    preserve_host: false
+  - name: api-user-routes
+    service: api-server
+    paths:
+      - /api/user
+    methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+    strip_path: false
+    preserve_host: false
+  - name: external-test-route
+    service: test-url
+    paths:
+      - /CarRental/About
+    methods:
+      - GET
+    strip_path: false
+    preserve_host: false
+
+plugins:
+  - name: rate-limiting
+    config:
+      minute: 100
+      hour: 1000
+  - name: cors
+    config:
+      origins:
+        - "*"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+      headers:
+        - Accept
+        - Authorization
+        - Content-Type
+
