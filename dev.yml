@@ -40,6 +40,17 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: 123456
+    volumes:
+      - mongodata:/data/db
+
   apiserver:
     # image: ghcr.io/assalvatierra/2025ci_apiserver/myapp:latest
     image: local-myapp:latest
@@ -70,3 +81,4 @@ services:
 
 volumes:
   pgdata:
+  mongodata:
