@@ -28,6 +28,12 @@ services:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
 
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"      
+
   postgres:
     image: postgres:16
     container_name: postgres
@@ -51,33 +57,62 @@ services:
     volumes:
       - mongodata:/data/db
 
-  apiserver:
-    # image: ghcr.io/assalvatierra/2025ci_apiserver/myapp:latest
-    image: local-myapp:latest
-    container_name: myApiServer
-    ports:
-      - "8080:8080"
-      - "8081:8081"
+  elasticsearch:
+    # image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
+    image: elasticsearch:9.2.3
+    container_name: elasticsearch
     environment:
-      # Add environment variables as needed, e.g.:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://0.0.0.0:8080
-      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=postgres;Username=admin;Password=123456"
-    depends_on:
-       - postgres
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+      - xpack.monitoring.collection.enabled=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+    ports:
+      - "9200:9200"
+      - "9300:9300"
 
-  clientapp:
-    # image: ghcr.io/assalvatierra/2025ci_ngclient:latest
-    image: local-ngclient:latest
-    container_name: myClientApp
+  kibana:
+    image: kibana:9.2.3
+    container_name: kibana
     ports:
-      - "50361:80"
+      - "5601:5601"
     environment:
-      - API_URL=http://localhost:8080
-      - APP_NAME=Angular Client (Docker Compose)
-      - PRODUCTION=false
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
     depends_on:
-      - apiserver
+      - elasticsearch
+
+  # apiserver:
+  #   # image: ghcr.io/assalvatierra/2025ci_apiserver/myapp:latest
+  #   image: local-myapp:latest
+  #   container_name: myApiServer
+  #   ports:
+  #     - "8080:8080"
+  #     - "8081:8081"
+  #   environment:
+  #     # Add environment variables as needed, e.g.:
+  #     ASPNETCORE_ENVIRONMENT: Development
+  #     ASPNETCORE_URLS: http://0.0.0.0:8080
+  #     ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=postgres;Username=admin;Password=123456"
+  #   depends_on:
+  #      - postgres
+
+  # clientapp:
+  #   # image: ghcr.io/assalvatierra/2025ci_ngclient:latest
+  #   image: local-ngclient:latest
+  #   container_name: myClientApp
+  #   ports:
+  #     - "50361:80"
+  #   environment:
+  #     - API_URL_docker=http://localhost:8080
+  #     - API_URL=https://localhost:7083
+  #     - APP_NAME=Angular Client (Docker Compose)
+  #     - PRODUCTION=false
+  #   depends_on:
+  #     - apiserver
 
 volumes:
   pgdata:
